@@ -1,75 +1,85 @@
 #include <iostream>
-#include <algorithm>
 #include <vector>
 #include <cmath>
+#include <queue>
+#include <stack>
+#include <map>
+#include <set>
+#include <algorithm>
+
 using namespace std;
 
-float getDistance(int a, int b, int c, int d) {
-    return sqrt(pow(a - c, 2) + pow(b - d, 2));
-}
+class Graph {        // 无向图
+public:
+	int v, e;       // v 是顶点数， e是边的数目
+	vector<vector<int>> matrix;        //邻接矩阵
 
-void print(vector<pair<int, int>>& dots) {
-    for (auto& dot : dots)
-        cout << "(" << dot.first << "," << dot.second << ")";
-    cout << endl;
-}
+	Graph(int v, int e) : v(v), e(e) {
+		matrix = vector<vector<int>>(v, vector<int>(v, 0));
+		for (int i = 0; i < v; ++i) {
+			cout << "请输入相邻的两个顶点及连接边上的权值";
+			int a, b, power;            // 两个顶点和权值
+			cout << endl;
+			cin >> a >> b >> power;
+			matrix[a][b] = matrix[b][a] = power;
+		}
+	}
 
-float help(vector<pair<int, int>>& dots, int start, int end) {
-    if (start == end - 1) {
-        return getDistance(dots[start].first, dots[start].second,
-            dots[end].first, dots[end].second);
-    }
-    float dl = help(dots, start, (start + end) / 2);
-    float dr = help(dots, (start + end) / 2, end);
-    float d = min(dl, dr);
+	vector<vector<int>> prim() {
+		vector<vector<int>> res(v, vector<int>(v, 0));
+		vector<int> temp;               // 保存已有的顶点
+		bool* exists = new bool[v];     //顶点是否已经在集合里
+		exists[0] = true;               //从第一个顶点开始生成
+		temp.push_back(0);
 
-    int mid = (start + end) / 2;
-    for (int i = mid + 1; i <= end && dots[i].first - dots[mid].first < d; ++i) {
-        float dis = getDistance(dots[i].first, dots[i].second, dots[mid].first, dots[mid].second);
-        if (dis < d)
-            d = dis;
-    }
-    for (int i = mid - 1; i >= start && dots[mid].first - dots[i].first < d; --i) {
-        float dis = getDistance(dots[i].first, dots[i].second, dots[mid].first, dots[mid].second);
-        if (dis < d)
-            d = dis;
-    }
-    return d;
-}
+		while (temp.size() != v) {
+			int dist = 1000, mark1 = 0, mark2 = 0;
+			for (int i : temp) {
+				for (int j = 0; j < v; ++j) {
+					if (!exists[j] && matrix[i][j] != 0 && dist > matrix[i][j]) {
+						dist = matrix[i][j];
+						mark1 = i;
+						mark2 = j;
+					}
+				}
+			}
+			exists[mark2] = true;
+			temp.push_back(mark2);
+			res[mark1][mark2] = res[mark2][mark1] = matrix[mark1][mark2];
+		}
+		return res;
+	}
 
-float findMin(vector<pair<int, int>>& dots) {
-    sort(dots.begin(), dots.end(), [](pair<int, int> a, pair<int, int> b) {
-        return a.first < b.first;
-        });
-    return help(dots, 0, dots.size() - 1);
-}
+	void print(vector<vector<int>> Matrix) {
+		for (int i = 0; i < v; ++i) {
+			for (int j = 0; j < v; ++j) {
+				cout << Matrix[i][j] << "  ";
+			}
+			cout << endl;
+		}
+	}
+};
+
+/*
+ * 7  10
+ * 0 1 5
+ * 0 2 7
+ * 0 6 2
+ * 1 3 9
+ * 1 6 3
+ * 4 2 8
+ * 4 6 4
+ * 4 5 5
+ * 5 6 6
+ * 5 3 4
+ */
 
 int main() {
-    int n = 0, min = 0;
-    cin >> n;
-    vector<pair<int, int>> dots(n, pair<int, int>(0, 0));
-    for (size_t i = 0; i < n; i++)
-    {
-        int m, n;
-        cin >> m >> n;
-        dots[i] = pair<int, int>(m, n);
-    }
-    cout << findMin(dots);
-    return 0;
+	int m, n;
+	cout << "输入图的顶点数和边数：" << endl;
+	cin >> m >> n;
+	Graph g(m, n);
+	cout << "prim算法最小生成树的邻接矩阵" << endl;
+	g.print(g.prim());
+	return 0;
 }
-
-// {{12,5},{23,1},{3,27},{65,4},{2,5}}
-/*
-5 12 5 23 1 3 27 65 4 2 5
-10
-22 32
-28 100
-29 63
-65 94
-119 29
-108 75
-7 30
-108 85
-105 93
-6 9
-*/
