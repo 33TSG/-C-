@@ -1,75 +1,44 @@
-#include <iostream>
-#include <algorithm>
-#include <vector>
-#include <cmath>
+#include<stdio.h>
+#include<iostream>
+#include<math.h>
+
 using namespace std;
 
-float getDistance(int a, int b, int c, int d) {
-    return sqrt(pow(a - c, 2) + pow(b - d, 2));
-}
-
-void print(vector<pair<int, int>>& dots) {
-    for (auto& dot : dots)
-        cout << "(" << dot.first << "," << dot.second << ")";
-    cout << endl;
-}
-
-float help(vector<pair<int, int>>& dots, int start, int end) {
-    if (start == end - 1) {
-        return getDistance(dots[start].first, dots[start].second,
-            dots[end].first, dots[end].second);
+int main()
+{
+    double x, y, r, x1, y1, r1;
+    double s, s1, s2, s3, s4, s5, s6;
+    double b, b1, b2, c, c1, c2;
+    double d, d1, minn;
+    while (scanf_s("%lf %lf %lf", &x, &y, &r) != EOF) {
+        scanf_s("%lf %lf %lf", &x1, &y1, &r1);
+        d = sqrt((x - x1) * (x - x1) + (y - y1) * (y - y1));//两圆心的距离
+        if (r >= r1) { //求最小的 半径 以及 半径的差 （为了讨论 两圆内含的情况）
+            d1 = r - r1;
+            minn = r1;
+        }
+        else {
+            d1 = r1 - r;
+            minn = r;
+        }
+        if (d >= r + r1 || r == 0 || r1 == 0)//相离或相切 或半径至少一个是 0
+            printf("0.000\n");
+        else if (d <= d1 && d >= 0) {
+            s = acos(-1) * minn * minn;//内含的 π*r*r
+            printf("%0.3lf\n", s);
+        }
+        else {
+            b = (r * r + d * d - r1 * r1) / (2 * r * d); // 求出来 ∠oAB 的余弦
+            c = (r1 * r1 + d * d - r * r) / (2 * r1 * d); //∠OBA 的余弦
+            b1 = 2 * acos(b); //∠OAB==∠O1AB 所以b1=∠OAO1=2*∠OAB     acos(b) 是∠OAB
+            c1 = 2 * acos(c);//同上
+            s1 = (double)1 / 2 * r * r * sin(b1); //三角形面积公式
+            s2 = (double)1 / 2 * r1 * r1 * sin(c1);
+            s3 = (double)1 / 2 * b1 * r * r;// 扇形面积公式  b1 是角度
+            s4 = (double)1 / 2 * c1 * r1 * r1;
+            s = (s3 + s4) - (s1 + s2);//阴影面积公式=Soao1o+Sobo1o-Soao1b(两个扇形的面积-四边形的面积）
+            printf("%0.3lf\n", s);
+        }
     }
-    float dl = help(dots, start, (start + end) / 2);
-    float dr = help(dots, (start + end) / 2, end);
-    float d = min(dl, dr);
-
-    int mid = (start + end) / 2;
-    for (int i = mid + 1; i <= end && dots[i].first - dots[mid].first < d; ++i) {
-        float dis = getDistance(dots[i].first, dots[i].second, dots[mid].first, dots[mid].second);
-        if (dis < d)
-            d = dis;
-    }
-    for (int i = mid - 1; i >= start && dots[mid].first - dots[i].first < d; --i) {
-        float dis = getDistance(dots[i].first, dots[i].second, dots[mid].first, dots[mid].second);
-        if (dis < d)
-            d = dis;
-    }
-    return d;
 }
-
-float findMin(vector<pair<int, int>>& dots) {
-    sort(dots.begin(), dots.end(), [](pair<int, int> a, pair<int, int> b) {
-        return a.first < b.first;
-        });
-    return help(dots, 0, dots.size() - 1);
-}
-
-int main() {
-    int n = 0, min = 0;
-    cin >> n;
-    vector<pair<int, int>> dots(n, pair<int, int>(0, 0));
-    for (size_t i = 0; i < n; i++)
-    {
-        int m, n;
-        cin >> m >> n;
-        dots[i] = pair<int, int>(m, n);
-    }
-    cout << findMin(dots);
-    return 0;
-}
-
-// {{12,5},{23,1},{3,27},{65,4},{2,5}}
-/*
-5 12 5 23 1 3 27 65 4 2 5
-10
-22 32
-28 100
-29 63
-65 94
-119 29
-108 75
-7 30
-108 85
-105 93
-6 9
-*/
+// 0 0 2 2 2 2
