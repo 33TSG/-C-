@@ -1,44 +1,53 @@
-#include<stdio.h>
-#include<iostream>
-#include<math.h>
-
+#include <iostream>
+#include <vector>
 using namespace std;
 
-int main()
-{
-    double x, y, r, x1, y1, r1;
-    double s, s1, s2, s3, s4, s5, s6;
-    double b, b1, b2, c, c1, c2;
-    double d, d1, minn;
-    while (scanf_s("%lf %lf %lf", &x, &y, &r) != EOF) {
-        scanf_s("%lf %lf %lf", &x1, &y1, &r1);
-        d = sqrt((x - x1) * (x - x1) + (y - y1) * (y - y1));//两圆心的距离
-        if (r >= r1) { //求最小的 半径 以及 半径的差 （为了讨论 两圆内含的情况）
-            d1 = r - r1;
-            minn = r1;
+class Solution {
+public:
+    /**
+     * 代码中的类名、方法名、参数名已经指定，请勿修改，直接返回方法规定的值即可
+     *
+     *
+     * @param str string字符串
+     * @param pattern string字符串
+     * @return bool布尔型
+     */
+    bool match(string str, string pattern) {
+        // write code here
+        if (pattern.empty())
+            return str.empty();
+        vector<vector<bool>> dp(str.size() + 1, vector<bool>(pattern.size() + 1, false));
+        // 初始化str = ""时pattern的匹配情况
+        dp[0][0] = true;
+        for (int j = 1; j <= pattern.size(); ++j) {
+            if (pattern[j - 1] == '*')
+                dp[0][j] = dp[0][j - 2];
         }
-        else {
-            d1 = r1 - r;
-            minn = r;
+
+        for (int i = 1; i <= str.size(); ++i) {
+            for (int j = 1; j <= pattern.size(); ++j) {
+                if (str[i - 1] == pattern[j - 1] || pattern[j - 1] == '.') {
+                    dp[i][j] = dp[i - 1][j - 1];
+                }
+                else if (pattern[j - 1] == '*') {
+                    if (dp[i][j - 1]) {       // 星号匹配一次，匹配一次是匹配多次的特殊情况，
+                        dp[i][j] = dp[i][j - 1];
+                    }
+                    else if (j >= 2 && dp[i][j - 2]) {      // 星号匹配零次
+                        dp[i][j] = dp[i][j - 2];
+                    }
+                    else if (i >= 2 && j >= 2) {      // 星号匹配多次
+                        dp[i][j] = (dp[i - 1][j] && str[i - 1] == pattern[j - 2] || pattern[j - 2] == '.');
+                    }
+                }
+            }
         }
-        if (d >= r + r1 || r == 0 || r1 == 0)//相离或相切 或半径至少一个是 0
-            printf("0.000\n");
-        else if (d <= d1 && d >= 0) {
-            s = acos(-1) * minn * minn;//内含的 π*r*r
-            printf("%0.3lf\n", s);
-        }
-        else {
-            b = (r * r + d * d - r1 * r1) / (2 * r * d); // 求出来 ∠oAB 的余弦
-            c = (r1 * r1 + d * d - r * r) / (2 * r1 * d); //∠OBA 的余弦
-            b1 = 2 * acos(b); //∠OAB==∠O1AB 所以b1=∠OAO1=2*∠OAB     acos(b) 是∠OAB
-            c1 = 2 * acos(c);//同上
-            s1 = (double)1 / 2 * r * r * sin(b1); //三角形面积公式
-            s2 = (double)1 / 2 * r1 * r1 * sin(c1);
-            s3 = (double)1 / 2 * b1 * r * r;// 扇形面积公式  b1 是角度
-            s4 = (double)1 / 2 * c1 * r1 * r1;
-            s = (s3 + s4) - (s1 + s2);//阴影面积公式=Soao1o+Sobo1o-Soao1b(两个扇形的面积-四边形的面积）
-            printf("%0.3lf\n", s);
-        }
+        return dp[str.size()][pattern.size()];
     }
+};
+
+int main() {
+    Solution* s = new Solution();
+    cout << s->match("aad", "c*a*d");
+    return 0;
 }
-// 0 0 2 2 2 2
