@@ -1,39 +1,128 @@
-#include <iostream>
-#include <vector>
+#include <stdio.h>
+#include <stdlib.h>
+#include <malloc.h>
+#include <time.h>
+#include <sys/timeb.h>
+#include <string.h>
 
-using namespace std;
+typedef struct RedType {
+    int key;        // 待排序序列关键字项
+}RedType;
 
-bool ok(int n, vector<int>& pos) {                       // 判断两个皇后是都否在同一列，同一斜线上
-    for (int i = 0; i < n; ++i) {       // 检查和前面放置的换后是否能攻击
-        if (pos[n] == pos[i] || abs(i - n) == abs(pos[i] - pos[n]))
-            return false;
+typedef struct SqList {
+    RedType* r;
+    int length;
+}SqList;
+
+SqList* CreateRandomSqList(int sqListLen) {
+    SqList* sq;
+    int i;
+    sq = (SqList*)malloc(sizeof(SqList));
+    sq->length = sqListLen;
+    sq->r = (RedType*)malloc((sq->length + 1) * sizeof(RedType));
+    srand((unsigned)time(NULL));
+    for (i = 1; i <= sq->length; i++) {
+        sq->r[i].key = (int)rand();
     }
-    return true;
+    return sq;
 }
 
-void traceBack(vector<int>& pos, int& res, int n) {
-    if (n == pos.size()) {
-        res++;
-    }
-    else {
-        for (int i = 0; i < pos.size(); ++i) {
-            pos[n] = i;                     // 第n个皇后放在 (n, i)上
-            if (ok(n, pos)) {            // 当第n个皇后放置在这个位置上可行时
-                traceBack(pos, res, n + 1);
+void InsertSort(SqList* L) {
+    int i, j;
+    for (i = 2; i <= L->length; i++) {
+        if (L->r[i].key < L->r[i - 1].key) {
+            L->r[0] = L->r[i];
+            for (j = i - 1; L->r[0].key < L->r[j].key; --j) {
+                L->r[j + 1] = L->r[j];
             }
-            pos[n] = 0;     // 回溯
+            L->r[j + 1] = L->r[0];
         }
     }
 }
 
-int NQueue(int n) {
-    vector<int> pos(n, 0);         // 记录每一行皇后放置的位置
-    int res{ 0 };
-    traceBack(pos, res, 0);
-    return res;
+void QuickSort(SqList* L, int begin, int end) {
+    if (begin > end)
+        return;
+    int tmp = L->r[begin].key;
+    int i = begin;
+    int j = end;
+    while (i != j) {
+        while (L->r[j].key >= tmp && j > i)
+            j--;
+        while (L->r[i].key <= tmp && j > i)
+            i++;
+        if (j > i) {
+            int t = L->r[i].key;
+            L->r[i].key = L->r[j].key;
+            L->r[j].key = t;
+        }
+    }
+    L->r[begin].key = L->r[i].key;
+    L->r[i].key = tmp;
+    QuickSort(L, begin, i - 1);
+    QuickSort(L, i + 1, end);
 }
 
+
+void print(SqList* L) {
+    for (int i = 1; i <= L->length; ++i) {
+        printf("%d ", L->r[i].key);
+    }
+    printf("\n");
+}
+/*
 int main() {
-    cout << NQueue(8);
-    return 0;
+    SqList* L;
+    struct __timeb64 stime, etime;
+    long int rmtime, rstime;
+    char ch[20];
+    FILE* fp;
+    fopen_s(&fp, "Curv.csv", "w");
+    for (size_t i = 1000; i <= 100000; i+=1000) {
+        _itoa_s(i, ch, 10);
+        strcat_s(ch, ",");
+        fwrite(ch, sizeof(char), strlen(ch), fp);
+    }
+    fwrite("\n", sizeof(char), 1, fp);
+
+    for (size_t i = 1000; i <= 100000; i += 1000) {
+        L = CreateRandomSqList(i);
+        _ftime64_s(&stime);
+        InsertSort(L);
+        _ftime64_s(&etime);
+        free(L->r);
+        free(L);
+        rstime = etime.time - stime.time;
+        rmtime = rstime * 1000;
+        rmtime += etime.millitm - stime.millitm;
+        _itoa_s(rmtime, ch, 10);
+        strcat_s(ch, ",");
+        fwrite(ch, sizeof(char), strlen(ch), fp);
+    }
+    fwrite("\n", sizeof(char), 1, fp);
+    fclose(fp);
+    return 1;
+}
+*/
+
+int main() {
+    SqList* L;
+    int n;
+    struct __timeb64 stime, etime;
+    long int rmtime, rstime;
+    scanf_s("%d", &n);
+    L = CreateRandomSqList(n);
+
+    _ftime64_s(&stime);
+    QuickSort(L, 1, L->length);
+    _ftime64_s(&etime);
+    free(L->r);
+    free(L);
+
+    rstime = etime.time - stime.time;
+    rmtime = rstime * 1000;
+    rmtime += etime.millitm - stime.millitm;
+
+    printf("Execute time=%d", rmtime);
+    return 1;
 }
