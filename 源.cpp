@@ -1,60 +1,71 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <math.h>
-#define Max 110
+#include<iostream>
+#include<conio.h>
+#include<fstream>
+#include<time.h>
+#include<sys/timeb.h>
+void Perm(int*, int, int);
+void Swap(int&, int&);
+using namespace std;
 
-int n1, n2, m, t;
-int match[Max][Max], f[Max][Max], g[Max][Max];
-int s1[Max], s2[Max];
+int main()
+{
 
-int max(int a, int b) {
-	return a > b ? a : b;
+	int a[10] = { 0,1,2,3,4,5,6,7,8 };
+	struct _timeb stime, etime;           //存储算法运行的开始时间和结束时间
+	long int rmtime, rstime;              //计算对应的秒和毫秒数
+	ofstream outfile;
+	string readfilename;
+	cout << "请输入将要打开的文件名：";
+	cin >> readfilename;
+	outfile.open(readfilename, ios::out);
+	if (!outfile)
+	{
+		cout << "文件打开失败" << endl;
+		exit(0);
+	}
+
+	for (int i = 5; i <= 9; i++)
+		outfile << i << (i == 9 ? "": ",");
+	outfile << endl;
+	for (int j = 4; j <= 8; j++) {
+		_ftime64_s(&stime);
+		//获取算法执行前的系统时间
+		Perm(a, 0, j);
+		_ftime64_s(&etime);                   //获取算法执行后的系统时间
+		rstime = etime.time - stime.time;               //计算时间差
+		rmtime = rstime * 1000 + (etime.millitm - stime.millitm);
+		outfile << rmtime << (j == 8 ? "" : ",");
+	}
+	outfile.close();
+
+	return 0;
 }
 
-int main() {
-	int i, j, k;
-	int ii, jj;
-	scanf_s("%d", &m);
-	while (m) {
-		m--;
-		scanf_s("%d %d", &n1, &n2);
-		for (i = 1; i <= n1; i++)
-			scanf_s("%d", &s1[i]);
-		for (i = 1; i <= n2; i++)
-			scanf_s("%d", &s2[i]);
-		memset(f, 0, sizeof(f));
-		memset(g, 0, sizeof(g));
-		for (i = 1; i <= n1; i++) {
-			for (j = 1; j <= n2; j++) {
-				if (s1[i] == s2[j - 1])
-					f[i][j] = j - 1;
-				else 
-					f[i][j] = f[i][j-1];
-			}
-		}
-		for (i = 1; i <= n2; i++) {
-			for (j = 1; j <= n1; j++) {
-				if (s2[i] == s1[j - 1])
-					g[i][j] = j - 1;
-				else
-					g[i][j] = g[i][j - 1];
-			}
-		}
-		memset(match, 0, sizeof(match));
-		for (i = 1; i <= n1; i++) {
-			for (j = 1; j <= n2; j++) {
-				match[i][j] = max(match[i][j-1], match[i-1][j]);
-				if (s1[i] == s2[j])
-					continue;
-				ii = f[i][j];
-				jj = g[j][i];
-				if (ii == 0 || jj == 0)
-					continue;
-				match[i][j] = max(match[i][j], match[jj-1][ii-1]+2);
-			}
-		}
-		printf("%d", match[n1][n2]);
+void Perm(int* list, int k, int m)
+{
+
+	int i;
+	if (k == m) {
+		for (i = 0; i <= m; i++)
+			printf("%d ", list[i]);
+		printf("\n");
+
 	}
-	return 0;
+	else {
+		for (i = k; i <= m; i++) {
+			Swap(list[k], list[i]);
+			Perm(list, k + 1, m);
+			Swap(list[k], list[i]);
+		}
+	}
+	return;
+}
+
+void Swap(int& i, int& j)
+{
+	int temp;
+	temp = i;
+	i = j;
+	j = temp;
+	return;
 }
