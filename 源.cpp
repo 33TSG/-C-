@@ -1,71 +1,118 @@
 #include<iostream>
 #include<conio.h>
-#include<fstream>
-#include<time.h>
-#include<sys/timeb.h>
-void Perm(int*, int, int);
-void Swap(int&, int&);
+#define MAXM 10
 using namespace std;
+void Perm(int*, int, int, int, int, int set[MAXM][MAXM], int nlist[MAXM]);
+int qlist[MAXM];
+int loss;
+int n, len, mn = 0;
 
-int main()
-{
-
-	int a[10] = { 0,1,2,3,4,5,6,7,8 };
-	struct _timeb stime, etime;           //存储算法运行的开始时间和结束时间
-	long int rmtime, rstime;              //计算对应的秒和毫秒数
-	ofstream outfile;
-	string readfilename;
-	cout << "请输入将要打开的文件名：";
-	cin >> readfilename;
-	outfile.open(readfilename, ios::out);
-	if (!outfile)
+int main() {
+	int* list;
+	int set[MAXM][MAXM];
+	int nlist[MAXM];
+	memset(qlist, 0, sizeof(qlist));
+	cin >> len;
+	cin >> loss;
+	n = 0;
+	while (cin >> qlist[n] && qlist[n] != -1)
+		n++;
+	mn = n;
+	list = new int[n];
+	for (size_t i = 0; i < n; i++)
 	{
-		cout << "文件打开失败" << endl;
-		exit(0);
+		list[i] = i;
 	}
-
-	for (int i = 5; i <= 9; i++)
-		outfile << i << (i == 9 ? "": ",");
-	outfile << endl;
-	for (int j = 4; j <= 8; j++) {
-		_ftime64_s(&stime);
-		//获取算法执行前的系统时间
-		Perm(a, 0, j);
-		_ftime64_s(&etime);                   //获取算法执行后的系统时间
-		rstime = etime.time - stime.time;               //计算时间差
-		rmtime = rstime * 1000 + (etime.millitm - stime.millitm);
-		outfile << rmtime << (j == 8 ? "" : ",");
-	}
-	outfile.close();
-
+	memset(set, 0, sizeof(set));
+	memset(nlist, 0, sizeof(nlist));
+	Perm(list, 0, 0, n - 1, 1, set, nlist);
+	cout << mn << endl;
 	return 0;
 }
-
-void Perm(int* list, int k, int m)
-{
-
+/*
+	Perm函数参数定义
+	ist - ->原始序列，存放每一个木块的编号
+	level->搜索到第几层
+	k-- > list 中搜索的起始位置
+	m-- > list 中搜索的最后位置
+	Count->第几块木料，木料的数量
+	set->二维矩阵，存放每一块木料中放的是第几个木块，set[i][i] = 1表示第i块木料可
+	以锯成第」块木块
+	nlist->当前树中存放的list 中的第几个木块，存放了所有可以组成当前木料的木块
+*/
+void Perm(int* list, int level, int k, int m, int count, int set[MAXM][MAXM], int nlist[MAXM]) {
 	int i;
-	if (k == m) {
-		for (i = 0; i <= m; i++)
-			printf("%d ", list[i]);
-		printf("\n");
-
+	int nset[MAXM][MAXM];
+	int mlist[MAXM];
+	int klist[MAXM];
+	if (m == 0) {
+		for (int l = k; l <= m; l++) {
+			set[count - 1][list[l]] = 1;
+		}
+		int flag = 0;
+		for (int l = 0; l <= count; l++) {
+			int sum = 0;
+			for (int h = 0; h < n; h++) {
+				if (set[l][h] == 1) {
+					sum += qlist[h] + loss;
+				}
+			}
+			if (sum > len + loss) {
+				flag = 1;
+				break;
+			}
+		}
+		if (flag == 0)
+			mn = mn > count ? count : mn;
+		return;
+	}
+	if (k > m) {
+		return;
 	}
 	else {
 		for (i = k; i <= m; i++) {
-			Swap(list[k], list[i]);
-			Perm(list, k + 1, m);
-			Swap(list[k], list[i]);
+			for (int l = 0; l < level; l++)
+				klist[l] = nlist[l];
+			klist[level] = list[i];
+			int left = 0;
+			for (int l = 0; l <= m; l++) {
+				int s;
+				for (s = 0; s <= level; s++) {
+					if (list[l] == klist[s])
+						break;
+				}
+				if (s > level)
+					mlist[left++] = list[l];
+			}
+			for (int l = 0; l < MAXM; l++) {
+				for (int h = 0; h < MAXM; h++) {
+					nset[l][h] = set[l][h];
+				}
+			}
+			for (int l = 0; l <= level; l++) {
+				nset[count - 1][klist[l]] = 1;
+			}
+			left--;
+			if (left < 0) {
+				int flag = 0;
+				for (int l = 0; l < count; l++) {
+					int sum = 0;
+					for (int h = 0; h < n; h++) {
+						if (nset[l][h] == 1) {
+							sum += qlist[h] + loss;
+						}
+					}
+					if (sum > len + loss) {
+						flag = 1;
+						break;
+					}
+				}
+				if (flag == 0) {
+					mn = mn > count ? count : mn;
+				}
+			}
+			Perm(mlist, 0, 0, left, count+1, nset, klist);
+			Perm(list, level+1, i+1, m, count, set, klist);
 		}
 	}
-	return;
-}
-
-void Swap(int& i, int& j)
-{
-	int temp;
-	temp = i;
-	i = j;
-	j = temp;
-	return;
 }
