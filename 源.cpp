@@ -1,62 +1,65 @@
 #include <iostream>
+#include <iomanip>
 using namespace std;
 
-void merge(int* a, int low, int mid, int hight)  //合并函数
-{
-	int* b = new int[hight - low + 1];  //用 new 申请一个辅助函数
-	int i = low, j = mid + 1, k = 0;    // k为 b 数组的小标
-	while (i <= mid && j <= hight)
-	{
-		if (a[i] <= a[j])
-		{
-			b[k++] = a[i++];  //按从小到大存放在 b 数组里面
-		}
-		else
-		{
-			b[k++] = a[j++];
-		}
-	}
-	while (i <= mid)  // j 序列结束，将剩余的 i 序列补充在 b 数组中 
-	{
-		b[k++] = a[i++];
-	}
-	while (j <= hight)// i 序列结束，将剩余的 j 序列补充在 b 数组中 
-	{
-		b[k++] = a[j++];
-	}
-	k = 0;  //从小标为 0 开始传送
-	for (int i = low; i <= hight; i++)  //将 b 数组的值传递给数组 a
-	{
-		a[i] = b[k++];
-	}
-	delete[]b;     // 辅助数组用完后，将其的空间进行释放（销毁）
-}
+const int MAXN = 1 << 10; // 棋盘最大大小为2^10*2^10
 
-void mergesort(int* a, int low, int hight) //归并排序
-{
-	if (low < hight)
-	{
-		int mid = (low + hight) / 2;
-		mergesort(a, low, mid);          //对 a[low,mid]进行排序
-		mergesort(a, mid + 1, hight);    //对 a[mid+1,hight]进行排序
-		merge(a, low, mid, hight);       //进行合并操作
-	}
+int board[MAXN][MAXN]; // 记录棋盘状态
+int tile = 0; // 骨牌编号
+
+void chessboard(int tr, int tc, int dr, int dc, int size) {
+    if (size == 1) return;
+    int t = ++tile;
+    int s = size / 2;
+
+    if (dr < tr + s and dc < tc + s)  // Case 1
+        chessboard(tr, tc, dr, dc, s);
+    else {
+        board[tr + s - 1][tc + s - 1] = t;
+        chessboard(tr, tc, tr + s - 1, tc + s - 1, s);
+    }
+
+    if (dr < tr + s and dc >= tc + s) // Case 2
+        chessboard(tr, tc + s, dr, dc, s);
+    else {
+        board[tr + s - 1][tc + s] = t;
+        chessboard(tr, tc + s, tr + s - 1, tc + s, s);
+    }
+
+    if (dr >= tr + s and dc < tc + s) // Case 3
+        chessboard(tr + s, tc, dr, dc, s);
+    else {
+        board[tr + s][tc + s - 1] = t;
+        chessboard(tr + s, tc, tr + s, tc + s - 1, s);
+    }
+
+    if (dr >= tr + s and dc >= tc + s) // Case 4
+        chessboard(tr + s, tc + s, dr, dc, s);
+    else {
+        board[tr + s][tc + s] = t;
+        chessboard(tr + s, tc + s, tr + s, tc + s, s);
+    }
+
 }
 
 int main() {
-	int n, k, a[100];
-	cout << "请输入数列中的元素个数 n 为：" << endl;
-	cin >> n;
-	cout << "请输入k的值：" << endl;
-	cin >> k;
-	cout << "请依次输入数列中的元素：" << endl;
-	for (int i = 0; i < n; i++) {
-		cin >> a[i];
-	}
-
-	mergesort(a, 0, n - 1);
-
-	cout << "第" << k << "大的值为：" << endl;
-	cout << a[n-k] << endl;
-	return 0;
+    int k, x, y;
+    cout << "输入k的值：";
+    cin >> k;
+    cout << "输入特殊方格的坐标x, y坐标值：";
+    cin >> x >> y;                                      // 输入棋盘大小以及空缺位置
+    board[x][y] = -1;                                   // 标记空缺位置为-1
+    chessboard(0, 0, x, y, 1 << k);  // 计算所有格子的骨牌编号
+    cout << "要求的棋盘如下：" << endl;
+    for (int i = (1 << k) - 1; i >= 0; --i) {
+        for (int j = 0; j < (1 << k); ++j) {
+            if (board[i][j] == -1) {
+                cout << left << setw(3) << " ";                    // 输出空缺位置
+            } else {
+                cout << left << setw(3) << board[i][j];
+            }
+        }
+        cout << endl ;
+    }
+    return 0;
 }
