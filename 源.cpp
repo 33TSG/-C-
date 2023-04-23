@@ -1,65 +1,52 @@
-#include <iostream>
-#include <iomanip>
-using namespace std;
+#include<stdio.h>
+#include<string.h>
 
-const int MAXN = 1 << 10; // 棋盘最大大小为2^10*2^10
+int vis[101][101];
+int map[101][101];
+int R, C;
 
-int board[MAXN][MAXN]; // 记录棋盘状态
-int tile = 0; // 骨牌编号
+int dp(int i, int j) {
+	int max = 0;
+	if (vis[i][j] > 0)
+		return vis[i][j];
+	if (i - 1 >= 0)
+		if (map[i - 1][j] < map[i][j])
+			if (max < dp(i - 1, j))
+				max = dp(i - 1, j);
 
-void chessboard(int tr, int tc, int dr, int dc, int size) {
-    if (size == 1) return;
-    int t = ++tile;
-    int s = size / 2;
+	if (i + 1 < R)
+		if (map[i + 1][j] < map[i][j])
+			if (max < dp(i + 1, j))
+				max = dp(i + 1, j);
 
-    if (dr < tr + s and dc < tc + s)  // Case 1
-        chessboard(tr, tc, dr, dc, s);
-    else {
-        board[tr + s - 1][tc + s - 1] = t;
-        chessboard(tr, tc, tr + s - 1, tc + s - 1, s);
-    }
+	if (j-1 >= 0) 
+		if (map[i][j-1] < map[i][j])
+			if (max < dp(i, j-1))
+				max = dp(i, j-1);
 
-    if (dr < tr + s and dc >= tc + s) // Case 2
-        chessboard(tr, tc + s, dr, dc, s);
-    else {
-        board[tr + s - 1][tc + s] = t;
-        chessboard(tr, tc + s, tr + s - 1, tc + s, s);
-    }
+	if (j+1 <= C) 
+		if (map[i][j+1] < map[i][j])
+			if (max < dp(i, j+1))
+				max = dp(i, j+1);
 
-    if (dr >= tr + s and dc < tc + s) // Case 3
-        chessboard(tr + s, tc, dr, dc, s);
-    else {
-        board[tr + s][tc + s - 1] = t;
-        chessboard(tr + s, tc, tr + s, tc + s - 1, s);
-    }
-
-    if (dr >= tr + s and dc >= tc + s) // Case 4
-        chessboard(tr + s, tc + s, dr, dc, s);
-    else {
-        board[tr + s][tc + s] = t;
-        chessboard(tr + s, tc + s, tr + s, tc + s, s);
-    }
-
+	return vis[i][j] = max+1;
 }
 
 int main() {
-    int k, x, y;
-    cout << "输入k的值：";
-    cin >> k;
-    cout << "输入特殊方格的坐标x, y坐标值：";
-    cin >> x >> y;                                      // 输入棋盘大小以及空缺位置
-    board[x][y] = -1;                                   // 标记空缺位置为-1
-    chessboard(0, 0, x, y, 1 << k);  // 计算所有格子的骨牌编号
-    cout << "要求的棋盘如下：" << endl;
-    for (int i = (1 << k) - 1; i >= 0; --i) {
-        for (int j = 0; j < (1 << k); ++j) {
-            if (board[i][j] == -1) {
-                cout << left << setw(3) << " ";                    // 输出空缺位置
-            } else {
-                cout << left << setw(3) << board[i][j];
-            }
-        }
-        cout << endl ;
-    }
-    return 0;
+	int i, j, ans, max;
+	scanf_s("%d%d", &R, &C);
+	for (i = 0; i < R; i++)
+		for (j = 0; j < C; j++)
+			scanf_s("%d", &map[i][j]);
+	max = 0;
+	for (i = 0; i < R; i++) {
+		memset(vis[i], -1, sizeof(vis[i]));
+		for (j = 0; j < C; j++) {
+			ans = dp(i, j);
+			if (ans > max)
+				max = ans;
+		}
+	}
+	printf("%d", max);
+	return 0;
 }
