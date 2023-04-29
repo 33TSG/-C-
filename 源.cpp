@@ -1,62 +1,57 @@
-#include <stdio.h>
-#include <string.h>
+#include <iostream>
+#include <algorithm>
+#include <vector>
 
-int vis[101][101];
-int map[101][101];
-int R, C;
+using namespace  std;
 
-int dfs(int i, int j) {
-    if (vis[i][j] > 0) {
-        return vis[i][j];
+int FindGreatestSumOfSubArray(vector<int> array) {
+    vector<int> dp(array.size(), 0);        // 到dp[i]位置的最大值
+    int Max = dp[0] = array[0];
+    for (int i = 1; i < array.size(); ++i) {
+        dp[i] = max(array[i], array[i] + dp[i - 1]);
+        Max = max(Max, dp[i]);
     }
-
-    int max = 1;
-
-    if (i - 1 >= 0 && map[i - 1][j] < map[i][j]) {
-        int tmp = dfs(i - 1, j) + 1;
-        max = tmp > max ? tmp : max;
-    }
-
-    if (i + 1 < R && map[i + 1][j] < map[i][j]) {
-        int tmp = dfs(i + 1, j) + 1;
-        max = tmp > max ? tmp : max;
-    }
-
-    if (j - 1 >= 0 && map[i][j - 1] < map[i][j]) {
-        int tmp = dfs(i, j - 1) + 1;
-        max = tmp > max ? tmp : max;
-    }
-
-    if (j + 1 < C && map[i][j + 1] < map[i][j]) {
-        int tmp = dfs(i, j + 1) + 1;
-        max = tmp > max ? tmp : max;
-    }
-
-    vis[i][j] = max;
-
-    return max;
+    return Max;
 }
 
-int main() {
-    int i, j, ans, max;
-    scanf_s("%d %d", &R, &C);
+int FindMaxSumOfSubMatrix(vector<vector<int>> matrix) {
+    int n = matrix.size(), m = matrix[0].size();
+    vector<int> temp(m, 0);     // 用于保存数组相加的临时数组
+    int sum = 0, Max = 0;
 
-    for (i = 0; i < R; i++) {
-        for (j = 0; j < C; j++) {
-            scanf_s("%d", &map[i][j]);
+    for (int begin = 0; begin < n; begin++) {
+        for (int k = 0; k < m; k++)
+            temp[k] = 0;             //重置为0，这一步非常关键
+
+        for (int end = begin; end < n; end++) {
+            for (int k = 0; k < m; k++)
+                temp[k] += matrix[end][k];      //从开始行到结束行进行压缩，压缩成一行
+            Max = FindGreatestSumOfSubArray(temp);//求出这一行数据的最大子段和
+            sum = max(Max, sum);
         }
     }
 
-    max = 1;
+    return sum;
+}
 
-    for (i = 0; i < R; i++) {
-        for (j = 0; j < C; j++) {
-            ans = dfs(i, j);
-            max = ans > max ? ans : max;
+int main()
+{
+    int n{ 0 };
+    cin >> n;
+    vector<vector<int>> matrix;
+    vector<int> row;
+    for (int i = 0; i < n; i++)
+    {
+        int t;
+        for (int j = 0; j < n; j++)
+        {
+            cin >> t;
+            row.push_back(t);
         }
+        matrix.push_back(row);
+        row.clear();
     }
 
-    printf("%d", max);
-
+    cout << FindMaxSumOfSubMatrix(matrix) << endl;
     return 0;
 }
