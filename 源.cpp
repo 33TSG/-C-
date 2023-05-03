@@ -1,48 +1,61 @@
-#include<iostream>
-#include<vector>
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#define MAX 100000
 
 using namespace std;
 
-// 回溯法求结果
-void traceBack(vector<string>& words, string aim, int l, int k, int &ans) {
-	if (aim.size() == k) {
-		cout << aim << endl;
-		ans++;
-	}
-	else {
-		for (int i = 0; i < words.size(); i++) {
-			string a = aim.substr(aim.length() - l + 1, l - 1);
-			string b = words[i].substr(0, l - 1);
-			if (a == b) {
-				aim += words[i][l-1];
-				traceBack(words, aim, l, k, ans);
-				aim.pop_back();
-			}
-		}
-	}
+struct Brick {
+    int price;
+    int copper;
+};
+
+int main() {
+    int n; // 工厂生产的砖种数
+    cin >> n;
+
+    vector<Brick> bricks(n + 1);
+    for (int i = 1; i <= n; i++) {
+        cin >> bricks[i].price >> bricks[i].copper;
+    }
+
+    int c; // 顾客数量
+    cin >> c;
+
+    while (c--) {
+        int m, cmin, cmax;
+        cin >> m >> cmin >> cmax;
+
+        vector<int> costs; // 存储满足要求的所有砖的价格
+        // f[i][j] 表示当要买i块砖头，含铜量为j时的最小价格
+        vector<vector<int>> dp(m + 1, vector<int>(cmax + 1, MAX));
+
+        sort(bricks.begin(), bricks.end(), [](Brick a, Brick b) {    // 按含铜量升序排序
+            return a.copper < b.copper;
+        });
+        dp[0][0] = 0;
+        for (int i = 1; i <= n; ++i) {
+            for (int j = 1; j <= m; ++j) {
+                for (int k = 1; k <= cmax; ++k) {
+                    if (k >= bricks[i].copper) {
+                        dp[j][k] = min(dp[j][k], dp[j - 1][k - bricks[i].copper] + bricks[i].price);
+                    }
+                }
+            }
+        }
+
+        int ans = MAX;
+        for (int i = cmin; i <= cmax; ++i) {
+            ans = min(ans, dp[m][i]);
+        }
+
+        if (ans != MAX)
+            cout << ans << endl;
+        else
+            cout << "NO" << endl;
+
+    }
+
+    return 0;
 }
 
-int main() { 
-	int m;		//m表示表中单词的个数
-	int n;		//n表示不同字母的最大个数
-	int k;		//k表示最后构成的字符串的长度
-	int ans{ 0 };	// 能够构成的满足条件的字符串的个数
-
-	cin >> m >> n >> k;
-	vector<string> words;	// 所有的单词
-	for (size_t i = 0; i < m; i++)
-	{	
-		string s;
-		cin >> s;
-		words.push_back(s);
-	}
-
-	for (size_t i = 0; i < words.size(); i++)
-	{
-		traceBack(words, words[i], words[i].size(), k, ans);
-	}
-
-	cout << ans;
-
-	return 0;
-}
