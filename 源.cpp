@@ -1,95 +1,88 @@
-#include <iostream>
-#include <vector>
+//#include"stdafx.h"
+#include"iostream"
+
 using namespace std;
 
-typedef struct process {
-    char ch;
-    int etime;
-} process;
+template<class Type>
+class Traveling {
 
-char getMaxtime(vector<process>& arr) {
-    int maxx = -1;
-    for (int i = 0; i < arr.size(); i++) {
-        maxx = max(maxx, arr[i].etime);
-    }
-    for (int i = 0; i < arr.size(); i++) {
-        if (maxx == arr[i].etime) {
-            return arr[i].ch;
+    //    friend Type Tsp(int **, int[], int, Type);
+    friend Type Tsp(Type** a, int v[], int n);
+
+public:
+    void Backtrack(int i);
+
+    //n→图G的项点数，x→存放当前解的结点编号
+    //bestx → 存放最优解的结点编号
+    int n, * x, * bestx;
+    //a→图G的邻接矩阵，cc→当前已求得的费用
+    //bestc→当前已求的的最佳路径的最优值
+    Type** a, cc, bestc;
+};
+
+template<class Type>
+Type Tsp(Type** a, int v[], int n);
+
+int main() {
+    int** a, * v, n, bestc;
+    cin >> n;
+    v = new int[n + 1];
+    a = new int* [n + 1];
+    for (int i = 0; i <= n; i++)
+        a[i] = new int[n + 1];
+    for (int i = 1; i <= n; i++)
+        for (int j = i + 1; j <= n; j++) {
+            cin >> a[i][j];
+            a[j][i] = a[i][j];
         }
+    bestc = Tsp(a, v, n);
+    cout << bestc << endl;
+    return 0;
+}
+
+template<class Type>
+void Traveling<Type>::Backtrack(int i) {
+    int temp;
+    if (i == n) {
+        if (a[x[n - 1]][x[n]] != 0 && a[x[n]][x[1]] != 0 &&
+            (cc + a[x[n - 1]][x[n]] + a[x[n]][x[1]] < bestc || bestc == 0)) {
+            //循环将当前的最优路径保存到bestx中
+            for (int j = 1; j <= n; j++)
+                bestx[j] = x[j];
+            bestc = cc + a[x[n - 1]][x[n]] + a[x[n]][x[1]];
+        }
+    }
+    else {
+        //在剩余的顶点中寻找满足条件的结点，因此j是从号结点开始
+        for (int j = i; j <= n; j++)
+            if (a[x[i - 1]][x[j]] != 0 && (cc + a[x[i - 1]][x[j]] < bestc || bestc == 0)) {
+                temp = x[i];
+                x[i] = x[j];
+                x[j] = temp;
+                cc += a[x[i - 1]][x[i]];
+                Backtrack(i + 1);
+                cc -= a[x[i - 1]][x[i]];
+                temp = x[i];
+                x[i] = x[j];
+                x[j] = temp;
+            }
     }
 }
 
-int main() {
-    int n;
-    int k;
-    vector<process> arr;
-    cout << "输入需要执行进程的个数以及相同进程的间隔：" << endl;
-    cin >> n >> k;
-    char ch;
-    cout << "输入进程名称：" << endl;
-    int i, j;
-    for (i = 0; i < n; i++) {
-        cin >> ch;
-        if (!arr.size()) {
-            process p1;
-            p1.ch = ch;
-            p1.etime = 1;
-            arr.push_back(p1);
-        }
-        else {
-            for (j = 0; j < arr.size(); j++) {
-                if (ch == arr[j].ch) {
-                    arr[j].etime++;
-                    break;
-                }
-            }
-            if (j == arr.size()) {
-                process p1;
-                p1.ch = ch;
-                p1.etime = 1;
-                arr.push_back(p1);
-            }
-        }
-    }
-    int count = 0;
-    vector<char> ans;
-    vector<process> wt;
-    while (count < n) {
-        int j;
-        for (int i = 0; i < arr.size(); i++) {
-            if (arr[i].etime) {
-                for (j = 1; j <= k; j++) {
-                    if (int(ans.size() - j) < 0) {
-                        j = k + 1;
-                        break;
-                    }
-                    if (arr[i].ch == ans[int(ans.size() - j)]) {
-                        break;
-                    }
-                }
-                if (j == k + 1) {
-                    wt.push_back(arr[i]);
-                }
-            }
-        }
-        if (int(wt.size()) == 0) {
-            ans.push_back('w');
-        }
-        else {
-            int q;
-            for (q = 0; q < arr.size(); q++) {
-                char ch1 = getMaxtime(wt);
-                if (arr[q].ch == ch1) {
-                    ans.push_back(arr[q].ch);
-                    arr[q].etime--;
-                    count++;
-                }
-            }
-        }
-        wt.clear();
-    }
-    for (auto i : ans) {
-        cout << i << ' ';
-    }
-    cout << endl <<  ans.size() << endl;
+template<class Type>
+Type Tsp(Type** a, int v[], int n) {
+    Traveling<Type> Y;
+    // 初始化Y
+    Y.x = new int[n + 1];
+    //存放x的初始值
+    for (int i = 1; i <= n; i++)
+        Y.x[i] = i;
+    Y.a = a;
+    Y.n = n;
+    Y.bestc = 0;
+    Y.bestx = v;
+    Y.cc = 0;
+    Y.Backtrack(2);
+    delete[] Y.x;
+    return Y.bestc;
 }
